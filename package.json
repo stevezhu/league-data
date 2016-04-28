@@ -5,6 +5,7 @@
   "main": "run.js",
   "author": "",
   "dependencies": {
+    "co": "^4.6.0",
     "kue": "^0.10.5",
     "mongodb": "^2.1.16"
   }
