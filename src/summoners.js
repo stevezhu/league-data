@@ -10,9 +10,15 @@ co(function*() {
   var SeedData = db.collection('seeddata'),
       Summoners = db.collection('summoners')
 
+  // https://docs.mongodb.org/manual/reference/operator/query/not/
+  // will find documents where either done doesn't exist as a key or done != true
   let cursor = SeedData.find({ done: { $not: { $eq: true } } });
   while (yield cursor.hasNext()) {
+    // https://developer.riotgames.com/api/methods
+    // reference match endpoint
+    // each document is a MatchDetail object
     let doc = yield cursor.next();
+
     let summoners = [];
     for (let participant of doc.participantIdentities) {
       let player = participant.player;
@@ -22,8 +28,9 @@ co(function*() {
       });
     }
 
-    for (let i = 0; i < summoners.length; i++) {
-      let summoner = summoners[i];
+    for (let summoner of summoners) {
+      // use $setOnInsert and upsert: true so that the summoner will only be inserted
+      // if it doesn't already exist in the db
       var r = yield Summoners.updateOne(summoner, { $setOnInsert: summoner }, { upsert: true });
       assert.equal(1, r.matchedCount + r.modifiedCount); // either modified or matched so sum must be 0
     }
