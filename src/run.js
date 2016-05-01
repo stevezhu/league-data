@@ -53,13 +53,15 @@ function* loadSeedData(db) {
   let count = 10;
   for (let i = 1; i <= count; i++) {
     let filename = `./seed_data/matches${i}.json`;
-    console.log("Loading", filename);
+
+    console.overwrite(`Loading ${filename}`);
 
     let matches = JSON.parse(yield fs.readFile(filename)).matches;
 
     var r = yield Matches.insertMany(matches);
     assert.equal(matches.length, r.insertedCount);
   }
+  console.overwriteDone();
 
   console.log("Done loading seed data");
 };
@@ -75,6 +77,7 @@ function* loadSummoners(db) {
   // https://docs.mongodb.org/manual/reference/operator/query/not/
   // will find documents where either done doesn't exist as a key or done != true
   let cursor = Matches.find({ processed: { $not: { $eq: true } } });
+  let count = 0; // to print progress
   while (yield cursor.hasNext()) {
     // https://developer.riotgames.com/api/methods
     // reference match endpoint
@@ -101,7 +104,30 @@ function* loadSummoners(db) {
     var r = yield Matches.updateOne(doc, {$set: { processed: true }});
     assert.equal(1, r.matchedCount);
     assert.equal(1, r.modifiedCount);
+
+    if (++count % 50 == 0) {
+      console.overwrite(`${count} matches processed`);
+    }
   }
+  console.overwrite(`${count} matches processed`); // print total count at the end in case it is not a multiple of 50
+  console.overwriteDone();
 
   console.log("Done gettings summoners from seed data");
 };
+
+{
+  let newlinePrinted = false;
+
+  console.overwrite = function(data) {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(data);
+  };
+
+  console.overwriteDone = function() {
+    if (!newlinePrinted) {
+      process.stdout.write('\n');
+      newlinePrinted = false;
+    }
+  };
+}
