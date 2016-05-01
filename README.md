@@ -1,3 +1,6 @@
+Only compatible with Node.js v6.0.0+  
+Written in es6
+
 `./scripts/mongo.sh` to run mongo server
 
 `./scripts/mongoshell.sh` to run mongo client
