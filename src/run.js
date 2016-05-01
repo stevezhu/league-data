@@ -25,19 +25,7 @@ suspend.run(function*() {
     yield* loadSummoners(db);
   }
 
-  while (true) {
-    // finds a summoner where the masteries havent been loaded yet
-    let summoner = yield Summoners.findOne({ lastUpdatedMasteries: { $exists: false } });
-    if (!_.isNull(summoner)) {
-      // TODO load more masteries
-    } else {
-      // TODO load more matches
-      // store summoners from each match
-      break;
-    }
-
-    yield setTimeout(resume(), API_CALL_INTERVAL); // wait interval until making next api call
-  }
+  yield* loadMasteryData(db);
 
   db.close();
 }, function(err) {
@@ -113,6 +101,26 @@ function* loadSummoners(db) {
   console.overwriteDone();
 
   console.log("Done gettings summoners from seed data");
+};
+
+function *loadMasteryData(db) {
+  console.log("Loading mastery data");
+
+  while (true) {
+    // finds a summoner where the masteries havent been loaded yet
+    let summoner = yield Summoners.findOne({ lastUpdatedMasteries: { $exists: false } });
+    if (!_.isNull(summoner)) {
+      // TODO load more masteries
+    } else {
+      // TODO load more matches
+      // store summoners from each match
+      break;
+    }
+
+    yield setTimeout(resume(), API_CALL_INTERVAL); // wait interval until making next api call
+  }
+
+  console.log("Done loading mastery data");
 };
 
 {
