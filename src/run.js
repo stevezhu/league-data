@@ -5,8 +5,6 @@ const assert = require('assert');
 const fs = require('mz/fs');
 const _ = require('lodash');
 
-const API_CALL_INTERVAL = 1250;
-
 const DB_URL = 'mongodb://localhost:27017/leaguedata';
 suspend.run(function*() {
   var db = yield MongoClient.connect(DB_URL);
@@ -103,6 +101,7 @@ function* loadSummoners(db) {
   console.log("Done gettings summoners from seed data");
 };
 
+const API_CALL_INTERVAL = 1250;
 function *loadMasteryData(db) {
   console.log("Loading mastery data");
 
