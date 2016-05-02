@@ -8,6 +8,7 @@ class RiotApi {
     _.defaults(options, {
       region: 'na'
     });
+
     this.key = options.key;
     this.region = options.region;
   }
@@ -20,12 +21,12 @@ class RiotApi {
       callback = arguments[1];
     }
 
-    params.key = this.key;
+    params.api_key = this.key;
     request.get({
       url: BASE_URL + path,
       qs: params
     }, function(err, response, body) {
-      callback.apply(null, arguments);
+      callback.apply(this, arguments);
     });
   }
 }
