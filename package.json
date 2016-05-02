@@ -5,10 +5,9 @@
   "main": "run.js",
   "author": "",
   "dependencies": {
-    "co": "^4.6.0",
-    "kue": "^0.10.5",
     "mongodb": "^2.1.16",
     "mz": "^2.4.0",
+    "request": "^2.72.0",
     "suspend": "^0.7.0"
   }
 }
