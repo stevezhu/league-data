@@ -31,6 +31,8 @@ class RiotApi {
     });
   }
 
+  // (playerId, championId, callback) or (playerId, callback)
+  // Returns champion mastery info for requested champion of player OR all champion mastery info for player
   getChampionMastery(playerId, championId, callback) {
     assert(arguments.length===2 || arguments.length===3);
     if(arguments.length===2) {
@@ -43,7 +45,12 @@ class RiotApi {
       path+=championId;
     }
     else path+='s';
-    console.log(path);
+    this.callEndpoint(path, callback);
+  }
+
+  // Returns an int of the total mastery score of a player (sum of all champion mastery levels)
+  getTotalMasteryScore(playerId, callback) {
+    let path = `/championmastery/location/na1/player/${playerId}/score`;
     this.callEndpoint(path, callback);
   }
 }
