@@ -9,6 +9,8 @@ const BASE_URL = 'https://na.api.pvp.net/';
  *   key: required,
  *   region: optional
  * });
+ *
+ * callbacks are in the form `function(err, data) {}`
  */
 class RiotApi {
   constructor(options) {
@@ -20,19 +22,18 @@ class RiotApi {
     this.region = options.region;
   }
 
-  // (path, callback) or (path, params, callback)
-  // callback in the form `function(err, data) {}`
-  callEndpoint(path, params, callback) {
+  // (path, callback) or (path, query, callback)
+  callEndpoint(path, query, callback) {
     assert(arguments.length === 2 || arguments.length === 3);
     if (arguments.length === 2) {
-      params = {};
+      query = {};
       callback = arguments[1];
     }
-    params.api_key = this.key;
+    query.api_key = this.key;
 
     request.get({
       url: BASE_URL + path,
-      qs: params
+      qs: query
     }, function(err, response, body) {
       callback.call(this, err, JSON.parse(body));
     });
@@ -40,7 +41,6 @@ class RiotApi {
 
   // (playerId, championId, callback) or (playerId, callback)
   // Returns champion mastery info for requested champion of player OR all champion mastery info for player
-  // callback in the form `function(err, data) {}`
   getChampionMastery(playerId, championId, callback) {
     assert(arguments.length===2 || arguments.length===3);
     if(arguments.length===2) {
@@ -53,7 +53,6 @@ class RiotApi {
   }
 
   // Returns an int of the total mastery score of a player (sum of all champion mastery levels)
-  // callback in the form `function(err, data) {}`
   getTotalMasteryScore(playerId, callback) {
     let path = `/championmastery/location/NA1/player/${playerId}/score`;
     this.callEndpoint(path, callback);
@@ -61,7 +60,6 @@ class RiotApi {
 
   // (playerId, query, callback) or (playerId, callback)
   // Returns info for top 3 champions by default; enter number for query to adjust number of champions
-  // callback in the form `function(err, data) {}`
   getTopChampions(playerId, query, callback) {
     assert(arguments.length===2 || arguments.length===3);
     if(arguments.length===2) {
@@ -78,21 +76,21 @@ class RiotApi {
   /**
    * Methods generated
    *
-   * getStaticDataChampions(params, callback)
-   * getStaticDataChampionById(id, params, callback)
-   * getStaticDataItems(params, callback)
-   * getStaticDataItemById(id, params, callback)
-   * getStaticDataLanguageStrings(params, callback)
-   * getStaticDataLanguages(params, callback)
-   * getStaticDataMap(params, callback)
-   * getStaticDataMasteries(params, callback)
-   * getStaticDataMasteryById(id, params, callback)
-   * getStaticDataRealm(params, callback)
-   * getStaticDataRunes(params, callback)
-   * getStaticDataRuneById(id, params, callback)
-   * getStaticDataSummonerSpells(params, callback)
-   * getStaticDataSummonerSpellById(id, params, callback)
-   * getStaticDataVersions(params, callback)
+   * getStaticDataChampions(query, callback)
+   * getStaticDataChampionById(id, query, callback)
+   * getStaticDataItems(query, callback)
+   * getStaticDataItemById(id, query, callback)
+   * getStaticDataLanguageStrings(query, callback)
+   * getStaticDataLanguages(query, callback)
+   * getStaticDataMap(query, callback)
+   * getStaticDataMasteries(query, callback)
+   * getStaticDataMasteryById(id, query, callback)
+   * getStaticDataRealm(query, callback)
+   * getStaticDataRunes(query, callback)
+   * getStaticDataRuneById(id, query, callback)
+   * getStaticDataSummonerSpells(query, callback)
+   * getStaticDataSummonerSpellById(id, query, callback)
+   * getStaticDataVersions(query, callback)
    */
 
   // id: true means the data type has an endpoint with and without id as a path parameter
@@ -135,19 +133,19 @@ class RiotApi {
 
         assert(len === maxArgLen - 1 || len === maxArgLen);
 
-        // set id, params, and callback
-        var id, params, callback;
+        // set id, query, and callback
+        var id, query, callback;
         if (isIdMethod) {
           id = arguments[0];
-          params = arguments[1];
+          query = arguments[1];
           callback = arguments[2];
         } else {
-          params = arguments[0];
+          query = arguments[0];
           callback = arguments[1];
         }
         // if optional argument is not included
         if (len == maxArgLen - 1) {
-          params = {};
+          query = {};
           callback = arguments[maxArgLen - 2];
         }
 
@@ -155,7 +153,7 @@ class RiotApi {
         var path = `/api/lol/static-data/${this.region}/v1.2/${key}`;
         if (isIdMethod) path += `/${id}`;
 
-        this.callEndpoint(path, params, callback);
+        this.callEndpoint(path, query, callback);
       }
     };
 
