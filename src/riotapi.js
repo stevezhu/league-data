@@ -14,19 +14,20 @@ class RiotApi {
   }
 
   // (path, callback) or (path, params, callback)
+  // callback in the form `function(err, data) {}`
   callEndpoint(path, params, callback) {
     assert(arguments.length === 2 || arguments.length === 3);
     if (arguments.length === 2) {
       params = {};
       callback = arguments[1];
     }
-
     params.api_key = this.key;
+
     request.get({
       url: BASE_URL + path,
       qs: params
     }, function(err, response, body) {
-      callback.apply(this, arguments);
+      callback.call(this, err, JSON.parse(body));
     });
   }
 }
