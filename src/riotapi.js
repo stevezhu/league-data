@@ -73,7 +73,7 @@ class RiotApi {
 
 {
   /**
-   * Methods
+   * Methods generated
    *
    * getStaticDataChampions(params, callback)
    * getStaticDataChampionById(id, params, callback)
@@ -90,10 +90,12 @@ class RiotApi {
    * getStaticDataSummonerSpells(params, callback)
    * getStaticDataSummonerSpellById(id, params, callback)
    * getStaticDataVersions(params, callback)
-   *
    */
 
-  // id: true means the data type has an endpoint with and without id as a path param
+  // id: true means the data type has an endpoint with and without id as a path parameter
+  // eg. champion includes both of the following:
+  // /api/lol/static-data/{region}/v1.2/champion
+  // /api/lol/static-data/{region}/v1.2/champion/{id}
   const STATIC_DATA_TYPES = {
     'champion': { id: true },
     'item': { id: true },
@@ -110,36 +112,53 @@ class RiotApi {
   for (let key of Object.keys(STATIC_DATA_TYPES)) {
     let options = STATIC_DATA_TYPES[key];
 
-    // the string to put into the function name
+    // the string to put into the method name
+    // converts key to camel case
     // eg. summoner-spell -> SummonerSpell
     name = _.map(key.split('-'), (s) => s.charAt(0).toUpperCase() + s.slice(1)).join('');
-    if (!_.has(options, 'plural')) {
-      options.plural = name + (options.id ? 's' : '');
-    }
     options.singular = name;
-
-    RiotApi.prototype[`getStaticData${options.plural}`] = function(params, callback) {
-      assert(arguments.length === 1 || arguments.length === 2);
-      if (arguments.length === 1) {
-        callback = arguments[0];
-        params = {};
+    if (!_.has(options, 'plural')) {
+      options.plural = name;
+      if (options.id) {
+        options.plural += 's';
       }
+    }
 
-      let path = `/api/lol/static-data/${this.region}/v1.2/${key}`;
-      this.callEndpoint(path, params, callback);
-    };
+    // GENERATE CLASS METHODS
+    let generateGetStaticDataMethod = function(key, isIdMethod) {
+      let maxArgLen = isIdMethod ? 3 : 2;
+      return function() {
+        let len = arguments.length;
 
-    if (options.id) {
-      RiotApi.prototype[`getStaticData${options.singular}ById`] = function(id, params, callback) {
-        assert(arguments.length === 2 || arguments.length === 3);
-        if (arguments.length === 2) {
+        assert(len === maxArgLen - 1 || len === maxArgLen);
+
+        // set id, params, and callback
+        var id, params, callback;
+        if (isIdMethod) {
+          id = arguments[0];
+          params = arguments[1];
+          callback = arguments[2];
+        } else {
+          params = arguments[0];
           callback = arguments[1];
+        }
+        // if optional argument is not included
+        if (len == maxArgLen - 1) {
           params = {};
+          callback = arguments[maxArgLen - 2];
         }
 
-        let path = `/api/lol/static-data/${this.region}/v1.2/${key}/${id}`;
+        // set path
+        var path = `/api/lol/static-data/${this.region}/v1.2/${key}`;
+        if (isIdMethod) path += `/${id}`;
+        
         this.callEndpoint(path, params, callback);
-      };
+      }
+    };
+
+    RiotApi.prototype[`getStaticData${options.plural}`] = generateGetStaticDataMethod(key, false);
+    if (options.id) {
+      RiotApi.prototype[`getStaticData${options.singular}ById`] = generateGetStaticDataMethod(key, true);
     }
   }
 }
