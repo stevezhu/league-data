@@ -34,11 +34,16 @@ class RiotApi {
   getChampionMastery(playerId, championId, callback) {
     assert(arguments.length===2 || arguments.length===3);
     if(arguments.length===2) {
-      championId = {};
+      championId = undefined;
       callback = arguments[1];
     }
 
-    let path = `/championmastery/location/na1/player/${playerId}/champion/${championId}`;
+    let path = `/championmastery/location/na1/player/${playerId}/champion`;
+    if(!_.isUndefined(championId)){
+      path+=championId;
+    }
+    else path+='s';
+    console.log(path);
     this.callEndpoint(path, callback);
   }
 }
