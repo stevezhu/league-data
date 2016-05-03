@@ -3,6 +3,13 @@ const assert = require('assert');
 const request = require('request');
 
 const BASE_URL = 'https://na.api.pvp.net/';
+
+/**
+ * new RiotApi({
+ *   key: required,
+ *   region: optional
+ * });
+ */
 class RiotApi {
   constructor(options) {
     _.defaults(options, {
@@ -67,7 +74,7 @@ class RiotApi {
   }
 }
 
-{
+{ // ===== GENERATE METHODS FOR RETRIEVING STATIC DATA =====
   /**
    * Methods generated
    *
