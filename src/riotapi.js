@@ -67,8 +67,16 @@ class RiotApi {
       callback = arguments[1];
     }
 
-    let path = `championmastery/location/NA1/player/${playerId}/topchampions`;
+    let path = `/championmastery/location/NA1/player/${playerId}/topchampions`;
     this.callEndpoint(path, query, callback);
+  }
+
+  // summonerIds is a list of summoner IDs, must be comma-separated and no more than 40 IDs at a time
+  // Returns summoner names associated with given summoner IDs
+  // callback in the form `function(err, data) {}`
+  getSummonerNames(summonerIds, callback) {
+    let path = `/api/lol/na/v1.4/summoner/${summonerIds}/name`;
+    this.callEndpoint(path, callback);
   }
 }
 
