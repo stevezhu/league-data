@@ -41,18 +41,14 @@ class RiotApi {
       callback = arguments[1];
     }
 
-    let path = `/championmastery/location/na1/player/${playerId}/champion`;
-    if(!_.isUndefined(championId)){
-      path+=championId;
-    }
-    else path+='s';
+    let path = `/championmastery/location/NA1/player/${playerId}/champion` + (_.isUndefined(championId) ? 's' : championId);
     this.callEndpoint(path, callback);
   }
 
   // Returns an int of the total mastery score of a player (sum of all champion mastery levels)
   // callback in the form `function(err, data) {}`
   getTotalMasteryScore(playerId, callback) {
-    let path = `/championmastery/location/na1/player/${playerId}/score`;
+    let path = `/championmastery/location/NA1/player/${playerId}/score`;
     this.callEndpoint(path, callback);
   }
 
@@ -66,7 +62,7 @@ class RiotApi {
       callback = arguments[1];
     }
 
-    let path = `championmastery/location/na1/player/${playerId}/topchampions`;
+    let path = `championmastery/location/NA1/player/${playerId}/topchampions`;
     this.callEndpoint(path, query, callback);
   }
 }
@@ -151,7 +147,7 @@ class RiotApi {
         // set path
         var path = `/api/lol/static-data/${this.region}/v1.2/${key}`;
         if (isIdMethod) path += `/${id}`;
-        
+
         this.callEndpoint(path, params, callback);
       }
     };
