@@ -33,6 +33,7 @@ class RiotApi {
 
   // (playerId, championId, callback) or (playerId, callback)
   // Returns champion mastery info for requested champion of player OR all champion mastery info for player
+  // callback in the form `function(err, data) {}`
   getChampionMastery(playerId, championId, callback) {
     assert(arguments.length===2 || arguments.length===3);
     if(arguments.length===2) {
@@ -49,9 +50,24 @@ class RiotApi {
   }
 
   // Returns an int of the total mastery score of a player (sum of all champion mastery levels)
+  // callback in the form `function(err, data) {}`
   getTotalMasteryScore(playerId, callback) {
     let path = `/championmastery/location/na1/player/${playerId}/score`;
     this.callEndpoint(path, callback);
+  }
+
+  // (playerId, query, callback) or (playerId, callback)
+  // Returns info for top 3 champions by default; enter number for query to adjust number of champions
+  // callback in the form `function(err, data) {}`
+  getTopChampions(playerId, query, callback) {
+    assert(arguments.length===2 || arguments.length===3);
+    if(arguments.length===2) {
+      query = {};
+      callback = arguments[1];
+    }
+
+    let path = `championmastery/location/na1/player/${playerId}/topchampions`;
+    this.callEndpoint(path, query, callback);
   }
 }
 
