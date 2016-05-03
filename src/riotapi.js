@@ -32,4 +32,77 @@ class RiotApi {
   }
 }
 
+{
+  /**
+   * Methods
+   *
+   * getStaticDataChampions(params, callback)
+   * getStaticDataChampionById(id, params, callback)
+   * getStaticDataItems(params, callback)
+   * getStaticDataItemById(id, params, callback)
+   * getStaticDataLanguageStrings(params, callback)
+   * getStaticDataLanguages(params, callback)
+   * getStaticDataMap(params, callback)
+   * getStaticDataMasteries(params, callback)
+   * getStaticDataMasteryById(id, params, callback)
+   * getStaticDataRealm(params, callback)
+   * getStaticDataRunes(params, callback)
+   * getStaticDataRuneById(id, params, callback)
+   * getStaticDataSummonerSpells(params, callback)
+   * getStaticDataSummonerSpellById(id, params, callback)
+   * getStaticDataVersions(params, callback)
+   *
+   */
+
+  // id: true means the data type has an endpoint with and without id as a path param
+  const STATIC_DATA_TYPES = {
+    'champion': { id: true },
+    'item': { id: true },
+    'language-strings': {},
+    'languages': {},
+    'map': {},
+    'mastery': { id: true, plural: 'Masteries' },
+    'realm': {},
+    'rune': { id: true },
+    'summoner-spell': { id: true },
+    'versions': {}
+  };
+
+  for (let key of Object.keys(STATIC_DATA_TYPES)) {
+    let options = STATIC_DATA_TYPES[key];
+
+    // the string to put into the function name
+    // eg. summoner-spell -> SummonerSpell
+    name = _.map(key.split('-'), (s) => s.charAt(0).toUpperCase() + s.slice(1)).join('');
+    if (!_.has(options, 'plural')) {
+      options.plural = name + (options.id ? 's' : '');
+    }
+    options.singular = name;
+
+    RiotApi.prototype[`getStaticData${options.plural}`] = function(params, callback) {
+      assert(arguments.length === 1 || arguments.length === 2);
+      if (arguments.length === 1) {
+        callback = arguments[0];
+        params = {};
+      }
+
+      let path = `/api/lol/static-data/${this.region}/v1.2/${key}`;
+      this.callEndpoint(path, params, callback);
+    };
+
+    if (options.id) {
+      RiotApi.prototype[`getStaticData${options.singular}ById`] = function(id, params, callback) {
+        assert(arguments.length === 2 || arguments.length === 3);
+        if (arguments.length === 2) {
+          callback = arguments[1];
+          params = {};
+        }
+
+        let path = `/api/lol/static-data/${this.region}/v1.2/${key}/${id}`;
+        this.callEndpoint(path, params, callback);
+      };
+    }
+  }
+}
+
 module.exports = RiotApi;
