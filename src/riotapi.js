@@ -34,7 +34,7 @@ class RiotApi {
   getChampionMastery(playerId, championId, callback) {
     assert(arguments.length===2 || arguments.length===3);
     if(arguments.length===2) {
-      championID = {};
+      championId = {};
       callback = arguments[1];
     }
 
