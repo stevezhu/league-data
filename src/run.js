@@ -4,6 +4,20 @@ const resume = suspend.resume;
 const assert = require('assert');
 const fs = require('mz/fs');
 const _ = require('lodash');
+const RiotApi = require('./riotapi.js');
+
+/**
+ * Format
+ *
+ * {
+ *   keys: []
+ * }
+ */
+let settings = require('../settings.json');
+
+let api = new RiotApi({
+  key: settings.keys[0]
+});
 
 const DB_URL = 'mongodb://localhost:27017/leaguedata';
 suspend.run(function*() {
@@ -29,6 +43,8 @@ suspend.run(function*() {
 }, function(err) {
   console.log(err.stack);
 });
+
+// ===== FUNCTIONS TO LOAD DATA =====
 
 // does not connect to riot api
 function* loadSeedData(db) {
@@ -62,7 +78,7 @@ function* loadSummoners(db) {
 
   // https://docs.mongodb.org/manual/reference/operator/query/not/
   // will find documents where either done doesn't exist as a key or done != true
-  let cursor = Matches.find({ processed: { $not: { $eq: true } } });
+  let cursor = Matches.find({ processed: { $ne: true } });
   let count = 0; // to print progress
   while (yield cursor.hasNext()) {
     // https://developer.riotgames.com/api/methods
@@ -87,7 +103,7 @@ function* loadSummoners(db) {
     }
 
     // mark that all the summoners ids have been retrieved from this match
-    var r = yield Matches.updateOne(doc, {$set: { processed: true }});
+    var r = yield Matches.updateOne(doc, { $set: { processed: true } });
     assert.equal(1, r.matchedCount);
     assert.equal(1, r.modifiedCount);
 
@@ -101,13 +117,16 @@ function* loadSummoners(db) {
   console.log("Done gettings summoners from seed data");
 };
 
-const API_CALL_INTERVAL = 1250;
+const API_CALL_INTERVAL = 1230;
 function *loadMasteryData(db) {
+  var Summoners = db.collection('summoners');
+  var Masteries = db.collection('masteries');
+
   console.log("Loading mastery data");
 
   while (true) {
     // finds a summoner where the masteries havent been loaded yet
-    let summoner = yield Summoners.findOne({ lastUpdatedMasteries: { $exists: false } });
+    let summoner = yield Summoners.findOne({ lastUpdatedMasteries: { $exists: false }, processing: { $ne: true } });
     if (!_.isNull(summoner)) {
       // TODO load more masteries
     } else {
