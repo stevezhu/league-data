@@ -124,15 +124,35 @@ function *loadMasteryData(db) {
 
   console.log("Loading mastery data");
 
+  // mark all summoners as not being processed in case the program exited early
+  var r = yield Summoners.updateMany({ processing: true }, { processing: false });
+
+  // TODO log the count of summoners processed
   while (true) {
-    // finds a summoner where the masteries havent been loaded yet
-    let summoner = yield Summoners.findOne({ lastUpdatedMasteries: { $exists: false }, processing: { $ne: true } });
+    // find a summoner whose masteries havent been loaded yet
+    let summoner = yield Summoners.findOne({
+      lastUpdatedMasteries: { $exists: false }, // TODO also add check for
+      processing: { $ne: true }
+    });
     if (!_.isNull(summoner)) {
-      // TODO load more masteries
+      Summoners.update(summoner, { $set: { processing: true } });
+      // TODO only have each mastery id be inserted once, then updated
+      api.getChampionMastery(summoner.id, function(err, data) {
+        Masteries.insertMany(data, function(err, r) {
+          assert.equal(null, err);
+          assert.equal(r.insertedCount, data.length);
+
+          Summoners.update(summoner, {
+            $set: { processing: false },
+            $currentDate: { lastUpdatedMasteries: true }
+          });
+        });
+      });
     } else {
-      // TODO load more matches
-      // store summoners from each match
-      break;
+      // TODO load more matches and store summoners from each match
+      if (_.isNull(yield Summoners.findOne({ lastUpdatedMasteries: { $exists: true } }))) {
+        break;
+      }
     }
 
     yield setTimeout(resume(), API_CALL_INTERVAL); // wait interval until making next api call
@@ -141,6 +161,7 @@ function *loadMasteryData(db) {
   console.log("Done loading mastery data");
 };
 
+// TODO move this to another file
 {
   let newlinePrinted = false;
 
