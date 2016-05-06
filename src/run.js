@@ -117,7 +117,7 @@ function* loadSummoners(db) {
   console.log("Done gettings summoners from seed data");
 };
 
-const API_CALL_INTERVAL = 1230;
+const API_CALL_INTERVAL = 1300;
 function *loadMasteryData(db) {
   var Summoners = db.collection('summoners');
   var Masteries = db.collection('masteries');
@@ -125,38 +125,71 @@ function *loadMasteryData(db) {
   console.log("Loading mastery data");
 
   // mark all summoners as not being processed in case the program exited early
-  var r = yield Summoners.updateMany({ processing: true }, { processing: false });
+  var r = yield Summoners.updateMany(
+    { processing: true },
+    { $set: { processing: false } }
+  );
 
-  // TODO log the count of summoners processed
+  let count = 0; // count being processed
+  let processedCount = 0; // count done processing
+  let lastPrintedCount = 0;
   while (true) {
     // find a summoner whose masteries havent been loaded yet
     let summoner = yield Summoners.findOne({
-      lastUpdatedMasteries: { $exists: false }, // TODO also add check for
-      processing: { $ne: true }
+      lastUpdatedMasteries: { $exists: false }, // TODO also add check for masteries that haven't been updated for a while
+      processing: { $ne: true } // if processing doesn't exit or is false
     });
     if (!_.isNull(summoner)) {
-      Summoners.update(summoner, { $set: { processing: true } });
-      // TODO only have each mastery id be inserted once, then updated
-      api.getChampionMastery(summoner.id, function(err, data) {
-        Masteries.insertMany(data, function(err, r) {
-          assert.equal(null, err);
-          assert.equal(r.insertedCount, data.length);
+      let summonerFilter = { id: summoner.id };
 
-          Summoners.update(summoner, {
-            $set: { processing: false },
-            $currentDate: { lastUpdatedMasteries: true }
+      var r = yield Summoners.updateOne(summonerFilter, { $set: { processing: true } });
+      assert.equal(1, r.matchedCount);
+      assert.equal(1, r.modifiedCount);
+
+      count++;
+
+      // TODO only have each mastery id be inserted once, then updated on later encounters
+      api.getChampionMastery(summoner.id, function(err, data) {
+        if (_.isNull(err) || err.status_code !== 500) {
+          Masteries.insertMany(data, function(err, r) {
+            assert.equal(null, err);
+            assert.equal(data.length, r.insertedCount);
+
+            Summoners.updateOne(summonerFilter, {
+              $set: { processing: false },
+              $currentDate: { lastUpdatedMasteries: true }
+            }, function(err, r) {
+              assert.equal(null, err);
+              assert.equal(1, r.matchedCount);
+              assert.equal(1, r.modifiedCount);
+
+              count--;
+              processedCount++;
+            });
           });
-        });
+        } else {
+          Summoners.updateOne(summonerFilter, { $set: { processing: false } }, function(err, r) {
+            assert.equal(null, err);
+            assert.equal(1, r.matchedCount);
+            assert.equal(1, r.modifiedCount);
+
+            count--;
+          });
+        }
       });
     } else {
       // TODO load more matches and store summoners from each match
-      if (_.isNull(yield Summoners.findOne({ lastUpdatedMasteries: { $exists: true } }))) {
-        break;
-      }
+      if (count === 0) break;
+    }
+
+    if (processedCount !== lastPrintedCount) {
+      lastPrintedCount = processedCount;
+      console.overwrite(`${processedCount} users processed`);
     }
 
     yield setTimeout(resume(), API_CALL_INTERVAL); // wait interval until making next api call
   }
+  console.overwriteDone();
 
   console.log("Done loading mastery data");
 };
