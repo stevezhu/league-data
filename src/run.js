@@ -150,7 +150,7 @@ function *loadMasteryData(db) {
 
       // TODO only have each mastery id be inserted once, then updated on later encounters
       api.getChampionMastery(summoner.id, function(err, data) {
-        if (_.isNull(err) || err.status_code !== 500) {
+        if (_.isNull(err) && (!data.status || data.status.status_code !== 500)) {
           Masteries.insertMany(data, function(err, r) {
             assert.equal(null, err);
             assert.equal(data.length, r.insertedCount);
@@ -189,7 +189,7 @@ function *loadMasteryData(db) {
 
     yield setTimeout(resume(), API_CALL_INTERVAL); // wait interval until making next api call
   }
-  console.overwriteDone();
+  if (processedCount > 0) console.overwriteDone();
 
   console.log("Done loading mastery data");
 };
